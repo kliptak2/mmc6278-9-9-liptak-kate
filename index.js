@@ -1,68 +1,67 @@
 // Your code here
-var weatherEl = document.getElementById("weather");
-var searchBox = document.getElementById("weather-search");
-var btn = document.querySelector("button")
-var apiKey = "1c882668d9c2c1fecdb66c8653ee2c47"
+const weatherEl = document.getElementById("weather");
+const searchBox = document.getElementById("weather-search");
+const btn = document.querySelector("button")
+const apiKey = "1c882668d9c2c1fecdb66c8653ee2c47"
 
-//Imperfect baseball analogy. Three true outcomes: strikeouts, walks, and home runs. Fetch = the pitch, response = a hit, catch = strike. Await = resolves the promise.
-btn.onclick = async function (e) {
+
+btn.onclick = async (e) => {
     e.preventDefault();
-    var userQuery = searchBox.value;
-    searchBox.value = "";                   //After get data.value, clear it out
-    if (!userQuery) {                        //If user types in anything that's falsy, run the below function 
-        renderResult("Location not found");
+    let userQuery = searchBox.value;
+    searchBox.value = "";
+    if (!userQuery) {
+        locationNotFound();
         return;
     }
-    var response = await fetch(`https://api.openweathermap.org/data/2.5/weather?units=imperial&appid=${apiKey}&q=${userQuery}`
-    ).catch(function (error) {                //If the api returns an error (a.k.a it can't carry out the request), do the following. Important! An error is still a response.
-        renderResult("Location not found");
-    });
+    let response = await fetch(`https://api.openweathermap.org/data/2.5/weather?units=imperial&appid=${apiKey}&q=${userQuery}`
+    ).catch(error => locationNotFound())
     console.log(response)
-    if (response.status !== 200 || response.data?.cod === 404) {
-        renderResult("Location not found");
+    let jsonData = await response.json()
+    console.log(jsonData)
+    if ((jsonData.cod && jsonData.cod != 200) || jsonData.data) {   //if jsonData.cod exists and it's not 200 OR if jsonData has a propert of data (i.e. 404 test), render "Location not found"
+        locationNotFound();
         return
     }
-    var jsonData = await response.json()    //This is a promise. Response.json = throwing the pitch. In javascript, a method is like a verb, a doing action.
-    console.log(jsonData)
     renderResult(jsonData)
 };
 
-function renderResult(data) {
-    console.log(data)
+const locationNotFound = () => {   //helper funtion to handle "Location not found" result
     weatherEl.innerHTML = "";
-    if (data === "Location not found") {
-        var h2 = document.createElement("h2")
-        h2.textContent = data
-        weatherEl.replaceChildren(h2)
-        return
-    }
-    var city = document.createElement("h2")
-    city.textContent = `${data.name}, ${data.sys.country}`
+    let h2 = document.createElement("h2")
+    h2.textContent = "Location not found"
+    weatherEl.replaceChildren(h2)
+}
 
-    var mapLink = document.createElement("a")
-    mapLink.href = `https://www.google.com/maps/search/?api=1&query=${data.coord.lat},${data.coord.lon}`
+const renderResult = ({name, sys, coord, weather, main, dt,}) => {   //this let us get rid of all the instances of "data.". So "data.name" becomes "name"
+    weatherEl.innerHTML = "";
+
+    let city = document.createElement("h2")
+    city.textContent = `${name}, ${sys.country}`
+
+    let mapLink = document.createElement("a")
+    mapLink.href = `https://www.google.com/maps/search/?api=1&query=${coord.lat},${coord.lon}`
     mapLink.target = "__BLANK"
     mapLink.textContent = "Click to view map"
 
-    var img = document.createElement("img")
-    img.src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`
+    let img = document.createElement("img")
+    img.src = `https://openweathermap.org/img/wn/${weather[0].icon}@2x.png`
 
-    var condition = document.createElement("p")
-    condition.textContent = data.weather[0].description
+    let condition = document.createElement("p")
+    condition.textContent = weather[0].description
     condition.style.textTransform = "capitalize"
 
-    var currentTemp = document.createElement("p")
-    currentTemp.innerHTML = `Current: ${data.main.temp}&deg; F`
+    let currentTemp = document.createElement("p")
+    currentTemp.innerHTML = `Current: ${main.temp}&deg; F`
 
-    var feelsLike = document.createElement("p")
-    feelsLike.innerHTML = `Feels like: ${data.main.feels_like}&deg; F`
+    let feelsLike = document.createElement("p")
+    feelsLike.innerHTML = `Feels like: ${main.feels_like}&deg; F`
 
-    var date = new Date(data.dt * 1000)
-    var timeString = date.toLocaleTimeString('en-US', {
+    let date = new Date(dt * 1000)
+    let timeString = date.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit'
     })
-    var dateEl = document.createElement("p")
+    let dateEl = document.createElement("p")
     dateEl.textContent = `Last updated: ${timeString}`
 
     weatherEl.replaceChildren(city, mapLink, img, condition, currentTemp, feelsLike, dateEl)
