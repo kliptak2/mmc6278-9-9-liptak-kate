@@ -32,7 +32,7 @@ const locationNotFound = () => {   //helper funtion to handle "Location not foun
     weatherEl.replaceChildren(h2)
 }
 
-const renderResult = ({name, sys, coord, weather, main, dt,}) => {   //this let us get rid of all the instances of "data.". So "data.name" becomes "name"
+const renderResult = ({name, sys, coord, weather, main, dt,}) => {   //this let us get rid of all the instances of "data." So "data.name" becomes simply "name"
     weatherEl.innerHTML = "";
 
     let city = document.createElement("h2")
